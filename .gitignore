@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
+*.egg-info
 /dist/
 /build/
 /MANIFEST
+tla2tools.jar

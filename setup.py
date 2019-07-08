@@ -1,23 +1,21 @@
-from distutils.core import setup
+from setuptools import setup
 
-with open('README.rst') as f:
+with open('README.md') as f:
     readme = f.read()
 
 setup(
-    name='echo_kernel',
-    version='1.1',
-    packages=['echo_kernel'],
-    description='Simple example kernel for Jupyter',
+    name='tlaplus_kernel',
+    version='0.1',
+    packages=['tlaplus_kernel'],
+    description='Jupyter kernel for TLA+',
+    author='Stas Kelvich',
+    author_email='stas.kelvich@gmail.com',
+    url='https://github.com/kelvich/tlaplus_kernel',
     long_description=readme,
-    author='Jupyter Development Team',
-    author_email='jupyter@googlegroups.com',
-    url='https://github.com/jupyter/echo_kernel',
+    include_package_data=True,
+    test_suite='tests',
     install_requires=[
         'jupyter_client', 'IPython', 'ipykernel'
     ],
-    classifiers=[
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3',
-    ],
+    zip_safe=False
 )
