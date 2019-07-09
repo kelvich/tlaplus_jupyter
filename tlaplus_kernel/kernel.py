@@ -53,11 +53,12 @@ class TLAPlusKernel(Kernel):
     implementation = 'tlaplus_kernel'
     implementation_version = '0.1'
     language = 'TLA+'
-    language_version = '1.5.7'
+    language_version = '2.13'
     language_info = {
-        'name': 'TLA+',
-        'mimetype': 'text/tlaplus',
+        'name': 'tlaplus',
+        'mimetype': 'text/x-tlaplus',
         'file_extension': '.tla',
+        'codemirror_mode': 'tlaplus'
     }
     banner = "TLA+"
 

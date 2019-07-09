@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import sys
+import shutil
 
 from jupyter_client.kernelspec import KernelSpecManager
 from IPython.utils.tempdir import TemporaryDirectory
@@ -10,6 +11,7 @@ kernel_json = {
     "argv": [sys.executable, "-m", "tlaplus_kernel", "-f", "{connection_file}"],
     "display_name": "TLA+",
     "language": "tla",
+    "codemirror_mode": "tlaplus"
 }
 
 def install_my_kernel_spec(user=True, prefix=None):
@@ -17,7 +19,10 @@ def install_my_kernel_spec(user=True, prefix=None):
         os.chmod(td, 0o755) # Starts off as 700, not user readable
         with open(os.path.join(td, 'kernel.json'), 'w') as f:
             json.dump(kernel_json, f, sort_keys=True)
-        # TODO: Copy any resources
+
+        # copy kernel.js
+        js_path = os.path.join(os.path.dirname(__file__), 'assets', 'kernel.js')
+        shutil.copy(js_path, td)
 
         print('Installing Jupyter kernel spec')
         KernelSpecManager().install_kernel_spec(td, 'tlaplus_kernel', user=user, prefix=prefix)

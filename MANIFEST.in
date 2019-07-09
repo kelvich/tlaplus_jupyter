@@ -1,3 +1,4 @@
 include README.md
 include tlaplus_kernel/vendor/tla2tools.jar
 include tlaplus_kernel/vendor/MC.cfg
+include tlaplus_kernel/assets/kernel.js
