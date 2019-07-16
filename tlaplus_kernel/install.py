@@ -4,8 +4,14 @@ import os
 import sys
 import shutil
 
+from future.standard_library import install_aliases
+install_aliases()
+from urllib.request import urlretrieve
+
 from jupyter_client.kernelspec import KernelSpecManager
 from IPython.utils.tempdir import TemporaryDirectory
+
+TOOLS_URI = "https://github.com/tlaplus/tlaplus/releases/download/v1.6.0/tla2tools.jar"
 
 kernel_json = {
     "argv": [sys.executable, "-m", "tlaplus_kernel", "-f", "{connection_file}"],
@@ -50,6 +56,15 @@ def main(argv=None):
         args.user = True
 
     install_my_kernel_spec(user=args.user, prefix=args.prefix)
+
+    vendor_dir = os.path.join(os.path.dirname(__file__), 'vendor')
+    try:
+        os.mkdir(vendor_dir)
+    except FileExistsError:
+        pass
+    jar_path = os.path.join(vendor_dir, 'tla2tools.jar')
+    print("Downloading tla2tools.jar to " + jar_path)
+    urlretrieve(TOOLS_URI, jar_path)
 
 if __name__ == '__main__':
     main()
