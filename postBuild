@@ -1,0 +1,3 @@
+# Binder post install
+
+python3 -m tlaplus_kernel.install
