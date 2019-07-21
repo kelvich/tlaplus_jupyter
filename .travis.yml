@@ -1,8 +1,6 @@
 language: python
 python:
-    - "nightly"
-    - "3.7-dev"
-    - 3.6
+    - 3.7
     - 3.5
     - 2.7
 install:
@@ -11,4 +9,3 @@ install:
   - python3 -m tlaplus_kernel.install
 script:
   - python setup.py test
-

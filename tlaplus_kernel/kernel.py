@@ -45,7 +45,7 @@ class TLAPlusKernel(Kernel):
                 config = self.tlc_re.sub('',code)
                 res = self.run_model(module_name, tlc=True, cfg=config)
             else:
-                res = f"Module '#{module_name}' not found.\n"
+                res = "Module '{}' not found.\n".format(module_name)
                 res += "Module should be defined and evaluated in some cell before tlc run."
         # constant expression
         else:
