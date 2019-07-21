@@ -6,6 +6,6 @@ python:
 install:
   - pip install jupyter
   - pip install .
-  - python3 -m tlaplus_kernel.install
+  - python -m tlaplus_kernel.install
 script:
   - python setup.py test
