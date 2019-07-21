@@ -13,10 +13,10 @@ ENV HOME /home/${NB_USER}
 RUN addgroup ${NB_USER} && adduser \
     -h ${HOME} -D -G ${NB_USER} -u ${NB_UID} ${NB_USER}
 
-COPY . ${HOME}
+COPY . ${HOME}/kernel
+RUN cd ${HOME}/kernel && python3 setup.py install
+RUN cd ${HOME} && python3 -m tlaplus_kernel.install
 RUN chown -R ${NB_UID} ${HOME}
-RUN cd ${HOME} && python3 setup.py install
-RUN cd ${HOME}/tests && python3 -m tlaplus_kernel.install
 
 USER ${NB_USER}
 WORKDIR $HOME
