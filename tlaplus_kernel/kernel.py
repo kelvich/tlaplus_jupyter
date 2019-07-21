@@ -1,10 +1,14 @@
 import os, tempfile
 import sys
 import re
+import logging
 
 from ipykernel.kernelbase import Kernel
 from subprocess import Popen, PIPE, STDOUT
 
+logging.basicConfig(filename='tlaplus_kernel.log', level=logging.DEBUG)
+logging.warning("warn")
+logging.info("info")
 
 class TLAPlusKernel(Kernel):
     implementation = 'tlaplus_kernel'
@@ -29,6 +33,7 @@ class TLAPlusKernel(Kernel):
     def dispatch_code(self, code):
         # module
         if self.mod_re.match(code):
+            logging.info("got module '%s'", code)
             module_name = self.mod_re.match(code).group(1)
             self.modules[module_name] = code
             res = self.run_model(module_name, tlc=False)
@@ -36,6 +41,7 @@ class TLAPlusKernel(Kernel):
                 res = ''
         # run config
         elif self.tlc_re.match(code):
+            logging.info("got run config '%s'", code)
             module_name = self.tlc_re.match(code).group(1)
             if module_name in self.modules:
                 config = self.tlc_re.sub('',code)
@@ -45,6 +51,7 @@ class TLAPlusKernel(Kernel):
                 res += "Module should be defined and evaluated in some cell before tlc run."
         # constant expression
         else:
+            logging.info("got expression '%s'", code)
             res = self.run_expr(code)
         return res
 
@@ -72,8 +79,10 @@ class TLAPlusKernel(Kernel):
             cmd += ['tla2sany.SANY']
         cmd += [name + '.tla']
 
+        logging.info("run_model '%s'", cmd)
         proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace.name)
         out = proc.communicate()[0].decode()
+        logging.info("run_model got response '%s'", out)
 
         workspace.cleanup()
         return out
