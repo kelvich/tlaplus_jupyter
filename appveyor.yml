@@ -3,13 +3,10 @@ environment:
   matrix:
   - TOXENV: py27
   - TOXENV: py37
-
 build: off
-
 install:
   - pip install jupyter
   - pip install .
   - python -m tlaplus_kernel.install
-
 test_script:
-- python setup.py test
+  - python setup.py test

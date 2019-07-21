@@ -99,7 +99,7 @@ class TLAPlusKernel(Kernel):
         """ % (expr)
         self.modules['expr'] = model_src
         raw = self.run_model('expr')
-        raw_lines = raw.split("\n")
+        raw_lines = raw.splitlines()
 
         if '"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines:
             start = raw_lines.index('"EXPR_BEGIN"')
