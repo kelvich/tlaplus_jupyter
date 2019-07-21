@@ -9,3 +9,6 @@ install:
   - python -m tlaplus_kernel.install
 script:
   - python setup.py test
+os:
+  - linux
+  - windows
