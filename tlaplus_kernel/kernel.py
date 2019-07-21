@@ -1,7 +1,9 @@
-import os, tempfile
+import os
+import tempfile
 import sys
 import re
 import logging
+import shutil
 
 from ipykernel.kernelbase import Kernel
 from subprocess import Popen, PIPE, STDOUT
@@ -54,18 +56,18 @@ class TLAPlusKernel(Kernel):
         return res
 
     def run_model(self, name, tlc=True, cfg=''):
-        workspace = tempfile.TemporaryDirectory()
+        workspace = tempfile.mkdtemp()
 
         assert(name in self.modules)
         # dump defined modules
         for module in self.modules:
-            f = open(os.path.join(workspace.name, module + '.tla'), 'w')
+            f = open(os.path.join(workspace, module + '.tla'), 'w')
             f.write(self.modules[module])
             f.close()
 
         # dump config
         if tlc:
-            f = open(os.path.join(workspace.name, 'run.cfg'), 'w')
+            f = open(os.path.join(workspace, 'run.cfg'), 'w')
             f.write(cfg)
             f.close()
 
@@ -78,11 +80,11 @@ class TLAPlusKernel(Kernel):
         cmd += [name + '.tla']
 
         logging.info("run_model '%s'", cmd)
-        proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace.name)
+        proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
         out = proc.communicate()[0].decode()
         logging.info("run_model got response '%s'", out)
 
-        workspace.cleanup()
+        shutil.rmtree(workspace)
         return out
 
     def run_expr(self, expr):
