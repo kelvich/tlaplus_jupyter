@@ -6,7 +6,7 @@ import logging
 from ipykernel.kernelbase import Kernel
 from subprocess import Popen, PIPE, STDOUT
 
-logging.basicConfig(filename='tlaplus_kernel.log', level=logging.DEBUG)
+# logging.basicConfig(filename='tlaplus_kernel.log', level=logging.DEBUG)
 
 class TLAPlusKernel(Kernel):
     implementation = 'tlaplus_kernel'
