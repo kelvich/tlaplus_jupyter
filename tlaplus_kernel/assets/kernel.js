@@ -1,71 +1,115 @@
 define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/codemirror'], function (cmsm, IPython, CodeMirror) {
 
-  load_mode = function () {
-    console.log("tlaplus kernel.js loaded");
+    load_mode = function () {
 
-    CodeMirror.defineSimpleMode("tlaplus", {
-      start: [
-        // The regex matches the token, the token property contains the type
-        { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+        console.log("tlaplus kernel.js loaded");
 
-        // You can match multiple tokens at once. Note that the captured
-        // groups must span the whole string in this case
-        { regex: /(\w+)\s*(?:\([^\)]*\))?\s*(==)/, token: ["keyword", "operator"] },
+        var re_join = function (arr) {
+            return new RegExp('^' + arr.map(function (w) { return w.source }).join('|') + '$')
+        };
 
-        // Rules are matched in the order in which they appear, so there is
-        // no ambiguity between this one and the one above
-        {
-          regex: /(?:ACTION|ASSUME|ASSUMPTION|AXIOM|BY|CASE|CHOOSE|CONSTANT|CONSTANTS|COROLLARY|DEF|DEFINE|DEFS|DOMAIN|ELSE|ENABLED|EXCEPT|EXTENDS|HAVE|HIDE|IF|IN|INSTANCE|LET|LAMBDA|LEMMA|LOCAL|MODULE|NEW";, "OBVIOUS|OMITTED|ONLY|OTHER|PICK|PROOF|PROPOSITION|PROVE|QED|RECURSIVE|SF_|STATE|SUFFICES|SUBSET|TAKE|TEMPORAL|THEN|THEOREM|UNCHANGED|UNION|USE|VARIABLE|VARIABLES|WF_|WITH|WITNESS)\b/,
-          token: "keyword"
-        },
-        { regex: /TRUE|FALSE|\\E|\\in|\\A/, token: "atom" },
-        { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
-        { regex: /\/(?:[^\\]|\\.)*?\//, token: "variable-3" },
+        var reserwed_words_re = re_join([
+            /ACTION/, /ASSUME/, /ASSUMPTION/, /AXIOM/, /BY/, /CASE/, /CHOOSE/, /CONSTANTS/,
+            /CONSTANT/, /COROLLARY/, /DEF/, /DEFINE/, /DEFS/, /DOMAIN/, /ELSE/, /ENABLED/,
+            /EXCEPT/, /EXTENDS/, /HAVE/, /HIDE/, /IF/, /IN/, /INSTANCE/, /LET/, /LAMBDA/,
+            /LEMMA/, /LOCAL/, /MODULE/, /NEW/, /OBVIOUS/, /OMITTED/, /ONLY/, /OTHER/, /PICK/,
+            /PROOF/, /PROPOSITION/, /PROVE/, /QED/, /RECURSIVE/, /SF_/, /STATE/, /SUFFICES/,
+            /SUBSET/, /TAKE/, /TEMPORAL/, /THEN/, /THEOREM/, /UNCHANGED/, /UNION/, /USE/,
+            /VARIABLES/, /VARIABLE/, /WF_/, /WITH/, /WITNESS/
+        ]);
 
-        // comments
-        { regex: /\\\*.*/, token: "comment" },
-        { regex: /\(\*/, token: "comment", next: "comment" },
-        { regex: /[-+\/\\*=<>!]+/, token: "operator" },
+        // < IDENTIFIER : <CASE0> | <CASE1> | <CASE2> | <CASE3> |  <CASE6> | <CASEN> | "@" >
+        //  < #CASE0 : "_" (<LETTER> | "_" | <DIGIT> )* <LETTER> (<LETTER> | "_" | <DIGIT> )*  >
+        // | < #CASE1 : <DIGIT> (<LETTER> | "_" | <DIGIT> )* <LETTER> (<LETTER> | "_" | <DIGIT> )*  >
+        // | < #CASE2 : ("W" | "S") ( (  ["a"-"z","A"-"E", "G"-"Z", "_"] | <DIGIT> ) (<LETTER> | "_" | <DIGIT> )* )? >
+        // | < #CASE3 : ("WF" | "SF") ( ( <LETTER> | <DIGIT> ) (<LETTER> | "_" | <DIGIT> )* )? >
+        // | < #CASE6 : ( ["a"-"z","A"-"R", "T"-"V", "X"-"Z"]) (<LETTER> | "_" | <DIGIT> )* >
+        // | < #CASEN : (<DIGIT>)+ <LETTER> ( <LETTER> | <DIGIT> | "_" )* >
+        var identifier_re = /(?!WF_|SF_)\w*[A-Za-z]\w*/;
+        var function_re = /(?!WF_|SF_)\w*[A-Za-z]\w*\s*(?=\()/;
+        var definition_re = /(?!WF_|SF_)\w*[A-Za-z]\w*\s*(?===)/;
 
-        // // indent and dedent properties guide autoindentation
-        // {regex: /[\{\[\(]/, indent: true},
-        // {regex: /[\}\]\)]/, dedent: true},
-        // {regex: /[a-z$][\w$]*/, token: "variable"},
-      ],
+        // (<DIGIT>)+
+        // | "0"
+        // | ("\\" ["o","O"] (["0"-"7"])+)
+        // | ("\\" ["b","B"] (["0","1"])+)
+        // | ("\\" ["h","H"] (["0"-"9","a"-"f","A"-"F"])+ )
+        var number_re = /\d+|\\[oO][0-7]+|\\[bB][0-1]+|\\[bB][\da-fA-F]+/;
 
-      // The multi-line comment state.
-      comment: [
-        { regex: /.*?\*\)/, token: "comment", next: "start" },
-        { regex: /.*/, token: "comment" }
-      ],
+        // "\""
+        // ( (~["\"", "`", "\n", "\r", "\\" ])
+        // | ( "`" ( ~["'" ] )* "'")
+        // | ( "\\" ["n","t","r","f","\\", "\""] )
+        // )*
+        // "\""
+        var string_re = /"(?:[^\\"]|\\.)*"?/;
 
-      // The meta property contains global information about the mode. It
-      // can contain properties like lineComment, which are supported by
-      // all modes, and also directives like dontIndentStates, which are
-      // specific to simple modes.
-      meta: {
-        dontIndentStates: ["comment"],
-        lineComment: '\*'
-      }
-    });
+        var prefix_re = re_join([
+            /\\lnot/, /\\neg/, /~/, /\[\]/, /<>/, /ENABLED/, /UNCHANGED/, /SUBSET/, /UNION/,
+            /DOMAIN/
+        ]);
+        var infix_re = re_join([
+            /\\approx/, /\\asymp/, /\\bigcirc/, /\\bullet/, /\\cap/, /\\cdot/,
+            /\\circ/, /\\cong/, /\\cup/, /\\div/, /\\doteq/, /\\equiv/, /\\geq/, /\\gg/, /\\in/,
+            /\\intersect/, /\\union/, /\\land/, /\\leq/, /\\ll/, /\\lor/, /\\o/, /\\odot/,
+            /\\ominus/, /\\oplus/, /\\oslash/, /\\otimes/, /\\prec/, /\\preceq/, /\\propto/,
+            /\\sim/, /\\simeq/, /\\sqcap/, /\\sqcup/, /\\sqsubset/, /\\sqsupset/, /\\sqsubseteq/,
+            /\\sqsupseteq/, /\\star/, /\\subset/, /\\subseteq/, /\\succ/, /\\succeq/, /\\supset/,
+            /\\supseteq/, /\\uplus/, /\\wr/, /\\/, /~>/, /=>/, /=</, /=\|/, /=/, /##/, /#/, /\^\^/,
+            /\^/, /--/, /-/, /\*/, /\+\+/, /\+/, /&&/, /&/, /\/\//, /\/\\/, /\/=/, /\//, /\\\//,
+            /-\|/, /-\+->/, /\*\*/, /<=>/, /<:/, /<=/, /</, />=/, />/, /\.\.\./, /\.\./, /\|\|/,
+            /\|/, /\|-/, /\|=/, /\$\$/, /\$/, /\?\?/, /%%/, /%/, /@@/, /!!/, /:>/, /:=/, /::=/,
+            /\(\+\)/, /\(-\)/, /\(.\)/, /\(\/\)/, /\(\\X\)/, /\\notin/, /\\times/, /\\X/
+        ]);
+        var postfix_re = re_join([/'/, /\^\+/, /\^\*/, /\^#/, /-\./]);
 
-    CodeMirror.defineMIME("text/x-tlaplus", "tlaplus");
+        CodeMirror.defineSimpleMode("tlaplus", {
+            start: [
+                { regex: reserwed_words_re, token: "keyword" },
+                { regex: definition_re, token: "variable-2" },
+                { regex: function_re, token: "variable-3" },
+                { regex: identifier_re, token: "variable" },
 
-    // assorted kludges to deal with fact that all this stuff can be loaded
-    // after full notebook init
-    IPython.CodeCell.options_default["cm_config"]["mode"] = "tlaplus";
-    [...document.querySelectorAll('.code_cell .CodeMirror')].forEach(c => {
-      c.CodeMirror.setOption('mode', 'tlaplus');
-    });
-    Jupyter.notebook.get_cells().forEach(c => {
-      c._options.cm_config['mode'] = 'tlaplus';
-    });
-  }
+                { regex: number_re, token: "number" },
+                { regex: string_re, token: "string" },
 
-  return {
-    onload: function () {
-      // setTimeout(load_mode, 3000);
-      load_mode();
+                { regex: /\\\*.*/, token: "comment" },
+                { regex: /\(\*/, token: "comment", next: "comment" },
+
+                { regex: prefix_re, token: "atom" },
+                { regex: infix_re, token: "atom" },
+                { regex: postfix_re, token: "atom" },
+            ],
+
+            comment: [
+                { regex: /.*?\*\)/, token: "comment", next: "start" },
+                { regex: /.*/, token: "comment" }
+            ],
+
+            meta: {
+                dontIndentStates: ["comment"],
+                lineComment: '\*'
+            }
+        });
+
+        CodeMirror.defineMIME("text/x-tlaplus", "tlaplus");
+
+        // assorted kludges to deal with fact that all this stuff can be loaded
+        // after full notebook init
+        IPython.CodeCell.options_default["cm_config"]["mode"] = "tlaplus";
+        [...document.querySelectorAll('.code_cell .CodeMirror')].forEach(c => {
+          c.CodeMirror.setOption('mode', 'tlaplus');
+        });
+        Jupyter.notebook.get_cells().forEach(function(c) {
+          c._options.cm_config['mode'] = 'tlaplus';
+        });
     }
-  }
+
+    return {
+        onload: function () {
+            load_mode();
+            // Enforce buggy loading:
+            // setTimeout(load_mode, 3000);
+        }
+    }
 });
