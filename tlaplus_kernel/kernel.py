@@ -26,8 +26,8 @@ class TLAPlusKernel(Kernel):
     def __init__(self, *args, **kwargs):
         super(TLAPlusKernel, self).__init__(*args, **kwargs)
         self.modules = {}
-        self.mod_re = re.compile("^\s*-----*\s*MODULE\s+(\w+)\s")
-        self.tlc_re = re.compile("^\s*!tlc:([^\s]+)\s+")
+        self.mod_re = re.compile(r'^\s*-----*\s*MODULE\s+(\w+)\s')
+        self.tlc_re = re.compile(r'^\s*!tlc:([^\s]+)\s+')
         self.vendor_path = os.path.join(os.path.dirname(__file__), 'vendor')
 
     def dispatch_code(self, code):
