@@ -48,6 +48,49 @@
 <body>
     <div id="code"></div>
     <script id="modecode" type="text/tlaplus">
+
+(*
+  (* nested comment check *)
+  Min(S) == CHOOSE i \in S : \A j \in S : i =< j
+  Max(S) == CHOOSE i \in S : \A j \in S : i >= j
+  Abs2(x) == Max({x, -x})
+*)
+
+Min(S) == CHOOSE i \in S : \A j \in S : i =< j
+Max(S) == CHOOSE i \in S : \A j \in S : i >= j
+Abs2(x) == Max({x, -x})
+
+(* test (* test (* test (* test *)*)*)*)
+
+Max(S) == CHOOSE i \in S : \A j \in S : i >= j
+
+(* test
+    (* test
+        (* test
+            (* test
+               *)*)*)*)
+
+Max(S) == CHOOSE i \in S : \A j \in S : i >= j
+
+
+(* --algorithm transfer
+variables alice_account = 10, bob_account = 10, money \in 1..20;
+
+begin
+A: alice_account := alice_account - money;
+B: bob_account := bob_account + money;
+C: assert alice_account >= 0;
+end algorithm *)
+
+(* --fair algorithm transfer
+variables alice_account = 10, bob_account = 10, money \in 1..20;
+
+begin
+A: alice_account := alice_account - money;
+B: bob_account := bob_account + money;
+C: assert alice_account >= 0;
+end algorithm *)
+
 ----------------------------- MODULE TLAToPCal -----------------------------
 EXTENDS Integers, Sequences, TLC
 

@@ -63,7 +63,15 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         ]);
         var postfix_re = re_join([/'/, /\^\+/, /\^\*/, /\^#/, /-\./]);
 
+        var pluscal_reserved_words_re = re_join([
+            /fair/, /algorithm/, /assert/, /await/, /begin/, /end/, /call/, /define/, /do/,
+            /either/, /or/, /goto/, /if/, /then/, /else/, /elsif/, /macro/, /print/, /procedure/,
+            /process/, /return/, /skip/, /variable/, /variables/, /while/, /with/, /when/
+        ]);
+        var pluscal_label_re = /\s*(?!WF_|SF_)\w*[A-Za-z]\w*:/;
+
         CodeMirror.defineSimpleMode("tlaplus", {
+
             start: [
                 { regex: reserwed_words_re, token: "keyword" },
                 { regex: definition_re, token: "variable-2" },
@@ -74,20 +82,40 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
                 { regex: string_re, token: "string" },
 
                 { regex: /\\\*.*/, token: "comment" },
-                { regex: /\(\*/, token: "comment", next: "comment" },
+                { regex: /\(\*/, token: "comment", push: "block_comment" },
 
                 { regex: prefix_re, token: "atom" },
                 { regex: infix_re, token: "atom" },
                 { regex: postfix_re, token: "atom" },
             ],
 
-            comment: [
-                { regex: /.*?\*\)/, token: "comment", next: "start" },
+            pluscal: [
+                { regex: pluscal_reserved_words_re, token: "keyword" },
+                { regex: reserwed_words_re, token: "keyword" },
+                { regex: pluscal_label_re, token: "atom", sol: true },
+                { regex: identifier_re, token: "variable" },
+
+                { regex: number_re, token: "number" },
+                { regex: string_re, token: "string" },
+
+                { regex: /\\\*.*/, token: "comment" },
+                { regex: /\(\*/, token: "comment", push: "block_comment" },
+                { regex: /.*?\*\)/, token: "keyword", next: "start"},
+
+                { regex: prefix_re, token: "atom" },
+                { regex: infix_re, token: "atom" },
+                { regex: postfix_re, token: "atom" },
+            ],
+
+            block_comment: [
+                { regex: /.*?--(?:algorithm|fair)/, token: "keyword", next: "pluscal" },
+                { regex: /.*?\(\*/, token: "comment", push: "block_comment" },
+                { regex: /.*?\*\)/, token: "comment", pop: true},
                 { regex: /.*/, token: "comment" }
             ],
 
             meta: {
-                dontIndentStates: ["comment"],
+                dontIndentStates: ["block_comment"],
                 lineComment: '\*'
             }
         });
