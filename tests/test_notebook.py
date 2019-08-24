@@ -28,4 +28,5 @@ class TestNotebook(TestCase):
         self.assertEqual(outputs[0]['text'], '{<<1, 1>>, <<1, 2>>, <<1, 3>>, <<2, 2>>, <<2, 3>>, <<3, 3>>}')
         self.assertEqual(outputs[1]['text'], '')
         self.assertTrue('97 states generated' in outputs[2]['text'])
+        # self.assertTrue('END TRANSLATION' in outputs[3]['text'])
 

@@ -30,59 +30,82 @@ class TLAPlusKernel(Kernel):
         self.tlc_re = re.compile(r'^\s*!tlc:([^\s]+)\s+')
         self.vendor_path = os.path.join(os.path.dirname(__file__), 'vendor')
 
-    def dispatch_code(self, code):
-        # module
-        if self.mod_re.match(code):
-            logging.info("got module '%s'", code)
-            module_name = self.mod_re.match(code).group(1)
-            self.modules[module_name] = code
-            res = self.run_model(module_name, tlc=False)
-            if 'Fatal' not in res:
-                res = ''
-        # run config
-        elif self.tlc_re.match(code):
-            logging.info("got run config '%s'", code)
-            module_name = self.tlc_re.match(code).group(1)
-            if module_name in self.modules:
-                config = self.tlc_re.sub('',code)
-                res = self.run_model(module_name, tlc=True, cfg=config)
-            else:
-                res = "Module '{}' not found.\n".format(module_name)
-                res += "Module should be defined and evaluated in some cell before tlc run."
-        # constant expression
-        else:
-            logging.info("got expression '%s'", code)
-            res = self.run_expr(code)
-        return res
-
-    def run_model(self, name, tlc=True, cfg=''):
+    def get_workspace(self):
         workspace = tempfile.mkdtemp()
-
-        assert(name in self.modules)
         # dump defined modules
         for module in self.modules:
             f = open(os.path.join(workspace, module + '.tla'), 'w')
             f.write(self.modules[module])
             f.close()
+        return workspace
 
-        # dump config
-        if tlc:
-            f = open(os.path.join(workspace, 'run.cfg'), 'w')
-            f.write(cfg)
-            f.close()
+    def tlatools_command(self):
+        return [
+            'java',
+            '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')
+        ]
 
-        cmd = ['java', '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')]
-        if tlc:
-            cmd += ['tlc2.TLC', '-deadlock']
-            cmd += ['-config', 'run.cfg']
-        else:
-            cmd += ['tla2sany.SANY']
-        cmd += [name + '.tla']
+    def eval_module(self, module_name, module_src):
+        self.modules[module_name] = module_src
+        workspace = self.get_workspace()
+        new_src = None
 
-        logging.info("run_model '%s'", cmd)
+        cmd = self.tlatools_command()
+        cmd += ['tla2sany.SANY']
+        cmd += [module_name + '.tla']
+
+        logging.info("eval_module '%s'", cmd)
         proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
         out = proc.communicate()[0].decode()
-        logging.info("run_model got response '%s'", out)
+        logging.info("eval_module got response '%s'", out)
+
+        if 'Fatal' in out:
+            shutil.rmtree(workspace)
+            return (out, None)
+
+        # run pcal.trans if needed
+        if '--algorithm' in module_src or '--fair' in module_src:
+            cmd = self.tlatools_command()
+            cmd += ['pcal.trans']
+            cmd += [module_name + '.tla']
+
+            logging.info("run_pcal '%s'", cmd)
+            proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
+            out = proc.communicate()[0].decode()
+            logging.info("run_pcal got response '%s'", out)
+
+            if 'error' in out:
+                shutil.rmtree(workspace)
+                return (out, None)
+
+            with open(os.path.join(workspace, module_name + '.tla')) as f:
+                new_src = f.read()
+
+            self.modules[module_name] = new_src
+            logging.info("eval_module update module src '%s'", new_src)
+
+        shutil.rmtree(workspace)
+        return ('', new_src)
+
+    def run_tlc(self, module_name, cfg=''):
+        assert(module_name in self.modules)
+
+        workspace = self.get_workspace()
+
+        # dump config
+        f = open(os.path.join(workspace, 'run.cfg'), 'w')
+        f.write(cfg)
+        f.close()
+
+        cmd = self.tlatools_command()
+        cmd += ['tlc2.TLC', '-deadlock']
+        cmd += ['-config', 'run.cfg']
+        cmd += [module_name + '.tla']
+
+        logging.info("run_tlc '%s'", cmd)
+        proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
+        out = proc.communicate()[0].decode()
+        logging.info("run_tlc got response '%s'", out)
 
         shutil.rmtree(workspace)
         return out
@@ -98,7 +121,7 @@ class TLAPlusKernel(Kernel):
         ====
         """ % (expr)
         self.modules['expr'] = model_src
-        raw = self.run_model('expr')
+        raw = self.run_tlc('expr')
         raw_lines = raw.splitlines()
 
         if '"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines:
@@ -112,13 +135,47 @@ class TLAPlusKernel(Kernel):
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
-        if not silent:
-            stream_content = {'name': 'stdout', 'text': self.dispatch_code(code)}
-            self.send_response(self.iopub_socket, 'stream', stream_content)
 
-        return {'status': 'ok',
-                # The base class increments the execution count
-                'execution_count': self.execution_count,
-                'payload': [],
-                'user_expressions': {},
-               }
+        # expression result
+        res = ''
+        # new cell content if needed
+        code_update = None
+
+        # module
+        if self.mod_re.match(code):
+            logging.info("got module '%s'", code)
+            module_name = self.mod_re.match(code).group(1)
+            res, code_update = self.eval_module(module_name, code)
+        # run config
+        elif self.tlc_re.match(code):
+            logging.info("got run config '%s'", code)
+            module_name = self.tlc_re.match(code).group(1)
+            if module_name in self.modules:
+                config = self.tlc_re.sub('',code)
+                res = self.run_tlc(module_name, cfg=config)
+            else:
+                res = "Module '{}' not found.\n".format(module_name)
+                res += "Module should be defined and evaluated in some cell before tlc run."
+        # constant expression
+        else:
+            logging.info("got expression '%s'", code)
+            res = self.run_expr(code)
+
+        self.send_response(self.iopub_socket, 'stream', {
+            'name': 'stdout',
+            'text': res
+        })
+
+        return {
+            'status': 'ok',
+            # The base class increments the execution count
+            'execution_count': self.execution_count,
+            'payload': [
+                {
+                    "source": "set_next_input",
+                    "text": code_update,
+                    "replace": True,
+                } if code_update else {}
+            ],
+            'user_expressions': {},
+        }
