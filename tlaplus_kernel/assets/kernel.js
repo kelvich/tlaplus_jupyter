@@ -66,7 +66,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         var pluscal_reserved_words_re = re_join([
             /fair/, /algorithm/, /assert/, /await/, /begin/, /end/, /call/, /define/, /do/,
             /either/, /or/, /goto/, /if/, /then/, /else/, /elsif/, /macro/, /print/, /procedure/,
-            /process/, /return/, /skip/, /variable/, /variables/, /while/, /with/, /when/
+            /process/, /return/, /skip/, /variables/, /variable/, /while/, /with/, /when/
         ]);
         var pluscal_label_re = /\s*(?!WF_|SF_)\w*[A-Za-z]\w*:/;
 
