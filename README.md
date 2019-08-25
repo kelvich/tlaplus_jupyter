@@ -1,13 +1,13 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/myh95n5j0j0pr04j/branch/master?svg=true)](https://ci.appveyor.com/project/kelvich/tlaplus-kernel/branch/master)
-[![Build Status](https://travis-ci.org/kelvich/tlaplus_kernel.svg?branch=master)](https://travis-ci.org/kelvich/tlaplus_kernel)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kelvich/tlaplus_kernel/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/myh95n5j0j0pr04j/branch/master?svg=true)](https://ci.appveyor.com/project/kelvich/tlaplus-jupyter/branch/master)
+[![Build Status](https://travis-ci.org/kelvich/tlaplus_jupyter.svg?branch=master)](https://travis-ci.org/kelvich/tlaplus_jupyter)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
 
 # tlaplus_jupyter
 
 Jupyter kernel for TLA⁺ and pluscal specification languages.
 * Syntax highlight based on official lexer.
 * REPL functionality for expressions.
-* Can be execulted online with binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_kernel/master)
+* Can be execulted online with binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
 * No need to install TLA Toolbox: Java and Python will be enough.
 
 XXX screen or gif

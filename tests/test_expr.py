@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from tlaplus_kernel.kernel import TLAPlusKernel
+from tlaplus_jupyter.kernel import TLAPlusKernel
 
 class TestExpressions(TestCase):
 

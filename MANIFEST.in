@@ -1,2 +1,2 @@
 include README.md
-include tlaplus_kernel/assets/kernel.js
+include tlaplus_jupyter/assets/kernel.js

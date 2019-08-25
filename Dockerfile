@@ -15,7 +15,7 @@ RUN addgroup ${NB_USER} && adduser \
 
 COPY . ${HOME}/kernel
 RUN cd ${HOME}/kernel && python3 setup.py install
-RUN cd ${HOME} && python3 -m tlaplus_kernel.install
+RUN cd ${HOME} && python3 -m tlaplus_jupyter.install
 RUN chown -R ${NB_UID} ${HOME}
 
 USER ${NB_USER}

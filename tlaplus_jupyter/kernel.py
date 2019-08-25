@@ -8,10 +8,10 @@ import shutil
 from ipykernel.kernelbase import Kernel
 from subprocess import Popen, PIPE, STDOUT
 
-# logging.basicConfig(filename='tlaplus_kernel.log', level=logging.DEBUG)
+# logging.basicConfig(filename='tlaplus_jupyter.log', level=logging.DEBUG)
 
 class TLAPlusKernel(Kernel):
-    implementation = 'tlaplus_kernel'
+    implementation = 'tlaplus_jupyter'
     implementation_version = '0.1'
     language = 'TLA+'
     language_version = '2.13'

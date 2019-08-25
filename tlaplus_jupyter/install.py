@@ -14,7 +14,7 @@ from IPython.utils.tempdir import TemporaryDirectory
 TOOLS_URI = "https://github.com/tlaplus/tlaplus/releases/download/v1.6.0/tla2tools.jar"
 
 kernel_json = {
-    "argv": [sys.executable, "-m", "tlaplus_kernel", "-f", "{connection_file}"],
+    "argv": [sys.executable, "-m", "tlaplus_jupyter", "-f", "{connection_file}"],
     "display_name": "TLA+",
     "language": "tla",
     "codemirror_mode": "tlaplus"
@@ -31,7 +31,7 @@ def install_my_kernel_spec(user=True, prefix=None):
         shutil.copy(js_path, td)
 
         print('Installing Jupyter kernel spec')
-        KernelSpecManager().install_kernel_spec(td, 'tlaplus_kernel', user=user, prefix=prefix)
+        KernelSpecManager().install_kernel_spec(td, 'tlaplus_jupyter', user=user, prefix=prefix)
 
 def _is_root():
     try:
