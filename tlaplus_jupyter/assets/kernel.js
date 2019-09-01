@@ -11,7 +11,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         var reserwed_words_re = re_join([
             /ACTION/, /ASSUME/, /ASSUMPTION/, /AXIOM/, /BY/, /CASE/, /CHOOSE/, /CONSTANTS/,
             /CONSTANT/, /COROLLARY/, /DEF/, /DEFINE/, /DEFS/, /DOMAIN/, /ELSE/, /ENABLED/,
-            /EXCEPT/, /EXTENDS/, /HAVE/, /HIDE/, /IF/, /IN/, /INSTANCE/, /LET/, /LAMBDA/,
+            /EXCEPT/, /EXTENDS/, /HAVE/, /HIDE/, /IF/, /INSTANCE/, /IN/, /LET/, /LAMBDA/,
             /LEMMA/, /LOCAL/, /MODULE/, /NEW/, /OBVIOUS/, /OMITTED/, /ONLY/, /OTHER/, /PICK/,
             /PROOF/, /PROPOSITION/, /PROVE/, /QED/, /RECURSIVE/, /SF_/, /STATE/, /SUFFICES/,
             /SUBSET/, /TAKE/, /TEMPORAL/, /THEN/, /THEOREM/, /UNCHANGED/, /UNION/, /USE/,
