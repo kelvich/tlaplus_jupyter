@@ -6,6 +6,7 @@ import sys
 import re
 import logging
 import shutil
+import multiprocessing
 
 from ipykernel.kernelbase import Kernel
 from subprocess import Popen, PIPE, STDOUT
@@ -29,7 +30,7 @@ class TLAPlusKernel(Kernel):
         super(TLAPlusKernel, self).__init__(*args, **kwargs)
         self.modules = {}
         self.mod_re = re.compile(r'^\s*-----*\s*MODULE\s+(\w+)\s')
-        self.tlc_re = re.compile(r'^\s*!tlc:([^\s]+)\s+')
+        self.tlc_re = re.compile(r'^\s*!tlc:([^\s]+)(.*)')
         self.vendor_path = os.path.join(os.path.dirname(__file__), 'vendor')
 
     def get_workspace(self):
@@ -44,6 +45,7 @@ class TLAPlusKernel(Kernel):
     def tlatools_command(self):
         return [
             'java',
+            '-XX:+UseParallelGC',
             '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')
         ]
 
@@ -96,7 +98,7 @@ class TLAPlusKernel(Kernel):
         shutil.rmtree(workspace)
         return ('', new_src)
 
-    def run_tlc(self, module_name, cfg=''):
+    def run_tlc(self, module_name, extra_keys, cfg=''):
         assert(module_name in self.modules)
 
         workspace = self.get_workspace()
@@ -107,8 +109,10 @@ class TLAPlusKernel(Kernel):
         f.close()
 
         cmd = self.tlatools_command()
-        cmd += ['tlc2.TLC', '-deadlock']
+        cmd += ['tlc2.TLC']
+        cmd += ['-workers', str(multiprocessing.cpu_count())]
         cmd += ['-config', 'run.cfg']
+        cmd += extra_keys
         cmd += [module_name + '.tla']
 
         out = self.run_proc(cmd, workspace)
@@ -127,7 +131,7 @@ class TLAPlusKernel(Kernel):
         ====
         """ % (expr)
         self.modules['expr'] = model_src
-        raw = self.run_tlc('expr')
+        raw = self.run_tlc('expr', [])
         raw_lines = raw.splitlines()
 
         if '"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines:
@@ -146,22 +150,27 @@ class TLAPlusKernel(Kernel):
         res = ''
         # new cell content if needed
         code_update = None
-
+        
         # module
         if self.mod_re.match(code):
             logging.info("got module '%s'", code)
             module_name = self.mod_re.match(code).group(1)
             res, code_update = self.eval_module(module_name, code)
+
         # run config
         elif self.tlc_re.match(code):
             logging.info("got run config '%s'", code)
             module_name = self.tlc_re.match(code).group(1)
+            extra_params = self.tlc_re.match(code).group(2).strip()
+            extra_params = [] if extra_params == '' else extra_params.split()
+
             if module_name in self.modules:
                 config = self.tlc_re.sub('',code)
-                res = self.run_tlc(module_name, cfg=config)
+                res = self.run_tlc(module_name, extra_params, cfg=config)
             else:
                 res = "Module '{}' not found.\n".format(module_name)
                 res += "Module should be defined and evaluated in some cell before tlc run."
+
         # constant expression
         else:
             logging.info("got expression '%s'", code)
