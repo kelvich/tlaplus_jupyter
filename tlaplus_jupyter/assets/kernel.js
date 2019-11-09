@@ -70,9 +70,16 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         ]);
         var pluscal_label_re = /\s*(?!WF_|SF_)\w*[A-Za-z]\w*:/;
 
+        var cfg_reserwed_words_re = re_join([
+            /CONSTANTS/, /CONSTANT/, /CONSTRAINTS/, /CONSTRAINT/, /ACTION_CONSTRAINTS/,
+            /ACTION_CONSTRAINT/, /INVARIANTS/, /INVARIANT/, /INIT/, /NEXT/, /VIEW/, /SYMMETRY/,
+            /SPECIFICATION/, /PROPERTY/, /PROPERTIES/, /TYPE_CONSTRAINT/, /TYPE/
+        ]);
+
         CodeMirror.defineSimpleMode("tlaplus", {
 
             start: [
+                { regex: cfg_reserwed_words_re, token: "keyword" },
                 { regex: reserwed_words_re, token: "keyword" },
                 { regex: definition_re, token: "variable-2" },
                 { regex: function_re, token: "variable-3" },
