@@ -41,7 +41,7 @@ In order to create new TLA⁺ notebook click on `New` button and select TLA⁺ i
 SPECIFICATION Spec
 INVARIANT TypeOK
 ```
-Init and next state formula can be set after keywords `INIT` and `NEXT` correspondingly. Constant definitions should follow `CONSTANTS` keyword separated by newline or commas. Full list of keywords supported by TLC can be found in [ModelConfig.java](https://github.com/tlaplus/tlaplus/tlatools/src/tlc2/tool/impl/ModelConfig.java).
+Init and next state formula can be set after keywords `INIT` and `NEXT` correspondingly. Constant definitions should follow `CONSTANTS` keyword separated by newline or commas. Description of possible config statements and syntax is given in chapter 14 of [Specifying systems](https://www.microsoft.com/en-us/research/publication/specifying-systems-the-tla-language-and-tools-for-hardware-and-software-engineers/) book.
 
 TLC evaluation happens in the context of all defined modules. So if model referres another model thst other model should be at some cell too.
 
