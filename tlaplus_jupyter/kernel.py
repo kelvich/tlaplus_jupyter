@@ -45,6 +45,19 @@ class TLAPlusKernel(Kernel):
             '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')
         ]
 
+    def run_proc(self, cmd, workspace):
+        logging.info("run_proc '%s'", cmd)
+
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=workspace)
+        out, err = [s.decode() for s in proc.communicate()]
+
+        logging.info("run_proc got response (rc=%d) stdout='%s' stderr='%s'",proc.returncode,out,err)
+
+        if proc.returncode != 0 and out == "":
+            out = "Failed to run tla2tools: %s" % (err)
+
+        return out
+
     def eval_module(self, module_name, module_src):
         self.modules[module_name] = module_src
         workspace = self.get_workspace()
@@ -54,10 +67,7 @@ class TLAPlusKernel(Kernel):
         cmd += ['tla2sany.SANY']
         cmd += [module_name + '.tla']
 
-        logging.info("eval_module '%s'", cmd)
-        proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
-        out = proc.communicate()[0].decode()
-        logging.info("eval_module got response '%s'", out)
+        out = self.run_proc(cmd, workspace)
 
         if 'Fatal' in out:
             shutil.rmtree(workspace)
@@ -69,10 +79,7 @@ class TLAPlusKernel(Kernel):
             cmd += ['pcal.trans']
             cmd += [module_name + '.tla']
 
-            logging.info("run_pcal '%s'", cmd)
-            proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
-            out = proc.communicate()[0].decode()
-            logging.info("run_pcal got response '%s'", out)
+            out = self.run_proc(cmd, workspace)
 
             if 'error' in out:
                 shutil.rmtree(workspace)
@@ -102,10 +109,7 @@ class TLAPlusKernel(Kernel):
         cmd += ['-config', 'run.cfg']
         cmd += [module_name + '.tla']
 
-        logging.info("run_tlc '%s'", cmd)
-        proc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=workspace)
-        out = proc.communicate()[0].decode()
-        logging.info("run_tlc got response '%s'", out)
+        out = self.run_proc(cmd, workspace)
 
         shutil.rmtree(workspace)
         return out
