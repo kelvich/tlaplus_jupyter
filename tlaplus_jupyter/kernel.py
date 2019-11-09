@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE, STDOUT
 class TLAPlusKernel(Kernel):
     implementation = 'tlaplus_jupyter'
     implementation_version = '0.1'
-    language = 'TLA+'
+    language = 'TLA⁺'
     language_version = '2.13'
     language_info = {
         'name': 'tlaplus',
@@ -21,7 +21,7 @@ class TLAPlusKernel(Kernel):
         'file_extension': '.tla',
         'codemirror_mode': 'tlaplus'
     }
-    banner = "TLA+"
+    banner = "TLA⁺"
 
     def __init__(self, *args, **kwargs):
         super(TLAPlusKernel, self).__init__(*args, **kwargs)

@@ -15,7 +15,7 @@ TOOLS_URI = "https://github.com/tlaplus/tlaplus/releases/download/v1.6.0/tla2too
 
 kernel_json = {
     "argv": [sys.executable, "-m", "tlaplus_jupyter", "-f", "{connection_file}"],
-    "display_name": "TLA+",
+    "display_name": "TLA⁺",
     "language": "tla",
     "codemirror_mode": "tlaplus"
 }

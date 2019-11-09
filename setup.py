@@ -7,7 +7,7 @@ setup(
     name='tlaplus_jupyter',
     version='0.1',
     packages=['tlaplus_jupyter'],
-    description='Jupyter kernel for TLA+',
+    description='Jupyter kernel for TLA⁺',
     author='Stas Kelvich',
     author_email='stas.kelvich@gmail.com',
     url='https://github.com/kelvich/tlaplus_jupyter',
