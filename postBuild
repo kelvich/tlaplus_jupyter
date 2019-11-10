@@ -1,4 +1,0 @@
-# Binder post install
-
-# get out of package dir to load jar to the installed package
-cd ~/tests && python3 -m tlaplus_kernel.install
