@@ -18,8 +18,10 @@ setup(
     include_package_data=True,
     test_suite='tests',
     install_requires=[
-        'jupyter>=1.0',
-        'ipykernel>=5.1',
+        # not actually needed, but it's simpler to install
+        'notebook>=6.0',
+        'jupyter-client>=5.3.4',
+        'ipykernel==4.10.1',
         'future>=0.18'
     ],
     zip_safe=False
