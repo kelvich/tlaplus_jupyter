@@ -18,9 +18,9 @@ setup(
     include_package_data=True,
     test_suite='tests',
     install_requires=[
-        'jupyter',
-        'ipykernel',
-        'future'
+        'jupyter>=1.0',
+        'ipykernel>=5.1',
+        'future>=0.18'
     ],
     zip_safe=False
 )
