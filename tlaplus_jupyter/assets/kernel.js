@@ -132,11 +132,15 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         // assorted kludges to deal with fact that all this stuff can be loaded
         // after full notebook init
         IPython.CodeCell.options_default["cm_config"]["mode"] = "tlaplus";
+
         [...document.querySelectorAll('.code_cell .CodeMirror')].forEach(c => {
-          c.CodeMirror.setOption('mode', 'tlaplus');
+            c.CodeMirror.setOption('mode', 'tlaplus');
         });
+
         Jupyter.notebook.get_cells().forEach(function(c) {
-          c._options.cm_config['mode'] = 'tlaplus';
+            if (c.cell_type == "code") {
+                c._options.cm_config['mode'] = 'tlaplus';
+            }
         });
     }
 
