@@ -19,7 +19,7 @@ setup(
     test_suite='tests',
     install_requires=[
         # not actually needed, but it's simpler to install
-        'notebook>=6.0',
+        'notebook>=5.7.8',
         'jupyter-client>=5.3.4',
         'ipykernel==4.10.1',
         'future>=0.18'
