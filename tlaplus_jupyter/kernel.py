@@ -2,7 +2,6 @@
 
 import os
 import tempfile
-import sys
 import re
 import logging
 import shutil
@@ -12,7 +11,6 @@ import traceback
 
 from ipykernel.kernelbase import Kernel
 
-# logging.basicConfig(filename='tlaplus_jupyter.log', level=logging.DEBUG)
 
 class TLAPlusKernel(Kernel):
     implementation = 'tlaplus_jupyter'
@@ -105,9 +103,8 @@ class TLAPlusKernel(Kernel):
             else:
                 return self.eval_expr(payload)
 
-        except Exception as error:
+        except Exception:
             return self.respond_with_error(traceback.format_exc())
-
 
     def eval_module(self, module_src):
 
@@ -309,4 +306,3 @@ ASSUME PrintT("EXPR_BEGIN") /\ PrintT(
 
         else:
             return self.respond_with_error("Unknown log command. Valid command are '%log'/'%log on'/'%log off'")
-

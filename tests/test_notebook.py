@@ -4,14 +4,12 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 from unittest import TestCase
 
+
 class TestNotebook(TestCase):
 
     @classmethod
     def setUpClass(cls):
         notebook_path = os.path.join(os.path.dirname(__file__), 'testnb.ipynb')
-        nb_name, _ = os.path.splitext(os.path.basename(notebook_path))
-        dirname = os.path.dirname(notebook_path)
-
         with open(notebook_path) as f:
             nb = nbformat.read(f, as_version=4)
 
@@ -24,7 +22,8 @@ class TestNotebook(TestCase):
     def test_expr(self):
         cell = self.cells[0]
         self.assertEqual(cell.execution_count, 1)
-        self.assertEqual(cell.outputs[0]['text'], '{<<1, 1>>, <<1, 2>>, <<1, 3>>, <<2, 2>>, <<2, 3>>, <<3, 3>>}')
+        res = '{<<1, 1>>, <<1, 2>>, <<1, 3>>, <<2, 2>>, <<2, 3>>, <<3, 3>>}'
+        self.assertEqual(cell.outputs[0]['text'], res)
 
     def test_module(self):
         cell = self.cells[1]
