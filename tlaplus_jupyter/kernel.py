@@ -8,6 +8,7 @@ import logging
 import shutil
 import multiprocessing
 import subprocess
+import traceback
 
 from ipykernel.kernelbase import Kernel
 
@@ -72,22 +73,23 @@ class TLAPlusKernel(Kernel):
 
     def do_execute(self, payload, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
-        """Route execute request depending on type.
-        """
+        """Route execute request depending on type."""
 
-        # XXX: try catch here?
+        try:
+            # module
+            if re.match(r'^\s*-----*\s*MODULE\s', payload):
+                return self.eval_module(payload)
 
-        # module
-        if re.match(r'^\s*-----*\s*MODULE\s', payload):
-            return self.eval_module(payload)
+            # run config
+            elif re.match(r'^\s*!tlc:', payload):
+                return self.eval_tlc_config(payload)
 
-        # run config
-        elif re.match(r'^\s*!tlc:', payload):
-            return self.eval_tlc_config(payload)
+            # otherwise treat payload as a constant expression
+            else:
+                return self.eval_expr(payload)
 
-        # otherwise treat payload as a constant expression
-        else:
-            return self.eval_expr(payload)
+        except Exception as error:
+            return self.respond_with_error(traceback.format_exc())
 
 
     def eval_module(self, module_src):
