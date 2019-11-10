@@ -31,6 +31,7 @@ class TLAPlusKernel(Kernel):
         super(TLAPlusKernel, self).__init__(*args, **kwargs)
         self.modules = {}
         self.vendor_path = os.path.join(os.path.dirname(__file__), 'vendor')
+        self.logfile = None
 
     def get_workspace(self):
         workspace = tempfile.mkdtemp()
@@ -60,6 +61,18 @@ class TLAPlusKernel(Kernel):
 
         return (out, proc.returncode)
 
+    def respond(self, res):
+        self.send_response(self.iopub_socket, 'stream', {
+            'name': 'stdout',
+            'text': res
+        })
+
+        return {
+            'status': 'ok',
+            'execution_count': self.execution_count,
+            'user_expressions': {},
+        }
+
     def respond_with_error(self, err):
         self.send_response(self.iopub_socket, 'stream', {
             'name': 'stderr',
@@ -83,6 +96,10 @@ class TLAPlusKernel(Kernel):
             # run config
             elif re.match(r'^\s*!tlc:', payload):
                 return self.eval_tlc_config(payload)
+
+            # tollge log collection
+            elif re.match(r'^\s*%log', payload):
+                return self.toggle_log(payload)
 
             # otherwise treat payload as a constant expression
             else:
@@ -207,13 +224,15 @@ class TLAPlusKernel(Kernel):
         # Wrap output in EXPR_BEGIN/EXPR_END to catch it later.
         # That method is due to github.com/will62794 and looks much nicer then
         # a regex-based set matching used in tla toolbox itself.
-        model_src = """
-        ---- MODULE expr ----
-        EXTENDS Naturals, Reals, Sequences, Bags, FiniteSets, TLC
-        ASSUME PrintT("EXPR_BEGIN") /\ PrintT(%s) /\ PrintT("EXPR_END")
-        ====
-        """ % (expr)
+        model_src = """---- MODULE expr ----
+EXTENDS Naturals, Reals, Sequences, Bags, FiniteSets, TLC
+ASSUME PrintT("EXPR_BEGIN") /\ PrintT(
+%s
+) /\ PrintT("EXPR_END")
+====\n""" % (expr)
         self.modules['expr'] = model_src
+
+        logging.info("eval_expr final source '%s'", model_src)
 
         workspace = self.get_workspace()
 
@@ -234,19 +253,53 @@ class TLAPlusKernel(Kernel):
         raw_lines = out.splitlines()
 
         if rc != 0 or not ('"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines):
-            return self.respond_with_error(out)
+            return self.respond_with_error(model_src + "\n" + out)
 
         start = raw_lines.index('"EXPR_BEGIN"')
         stop = raw_lines.index('"EXPR_END"')
         res = "\n".join(raw_lines[start+1:stop])
 
-        self.send_response(self.iopub_socket, 'stream', {
-            'name': 'stdout',
-            'text': res
-        })
+        return self.respond(res)
 
-        return {
-            'status': 'ok',
-            'execution_count': self.execution_count,
-            'user_expressions': {},
-        }
+
+    def toggle_log(self, payload):
+        """Runtime accessible logger"""
+
+        cmd = re.match(r'^\s*%log\s*([^\s]*)', payload).group(1)
+
+        if cmd == "on":
+            if not self.logfile:
+                self.logfile = tempfile.NamedTemporaryFile(delete=False)
+
+                handler = logging.FileHandler(self.logfile.name, 'a')
+                logger = logging.getLogger()
+                logger.setLevel(logging.DEBUG)
+                logger.addHandler(handler)
+
+                return self.respond("Logging enabled")
+            else:
+                return self.respond("Logging already enabled")
+
+        elif cmd == "off":
+            logger = logging.getLogger()
+            logger.setLevel(logging.ERROR)
+            for handle in logger.handlers:
+                logger.removeHandler(handle)
+            if self.logfile:
+                self.logfile.close()
+                os.unlink(self.logfile.name)
+                self.logfile = None
+
+            return self.respond("Logging disabled")
+
+        elif cmd == "":
+            if self.logfile:
+                with open(self.logfile.name, 'r') as file:
+                    data = file.read()
+                return self.respond(data)
+            else:
+                return self.respond_with_error("You need to enable logging first by evaluating '%log on'")
+
+        else:
+            return self.respond_with_error("Unknown log command. Valid command are '%log'/'%log on'/'%log off'")
+

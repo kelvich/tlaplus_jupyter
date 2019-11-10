@@ -45,7 +45,9 @@ Init and next state formula can be set after keywords `INIT` and `NEXT` correspo
 
 TLC evaluation happens in the context of all defined modules. So if model referres another model thst other model should be at some cell too.
 
-3. Cells containing nether `!tlc` prefix nor module definition is treated as a constant expression and will print it result on execution. As with `!tlc` evaluation happens in the context of all defined modules, so expression can refer anything defined in evaluated modules.
+3. Cells containing nether `%`-magic nor module definition is treated as a constant expression and will print it result on execution. As with `!tlc` evaluation happens in the context of all defined modules, so expression can refer anything defined in evaluated modules.
+
+4. Command `%log` / `%log on` / `%log off` correspondingly shows kernel log / enables logging / disables logging for currently open notebook.
 
 ## Sharing executable models with binder
 
