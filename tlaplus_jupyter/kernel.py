@@ -7,9 +7,9 @@ import re
 import logging
 import shutil
 import multiprocessing
+import subprocess
 
 from ipykernel.kernelbase import Kernel
-from subprocess import Popen, PIPE, STDOUT
 
 # logging.basicConfig(filename='tlaplus_jupyter.log', level=logging.DEBUG)
 
@@ -29,8 +29,6 @@ class TLAPlusKernel(Kernel):
     def __init__(self, *args, **kwargs):
         super(TLAPlusKernel, self).__init__(*args, **kwargs)
         self.modules = {}
-        self.mod_re = re.compile(r'^\s*-----*\s*MODULE\s+(\w+)\s')
-        self.tlc_re = re.compile(r'^\s*!tlc:([^\s]+)(.*)')
         self.vendor_path = os.path.join(os.path.dirname(__file__), 'vendor')
 
     def get_workspace(self):
@@ -42,7 +40,7 @@ class TLAPlusKernel(Kernel):
             f.close()
         return workspace
 
-    def tlatools_command(self):
+    def java_command(self):
         return [
             'java',
             '-XX:+UseParallelGC',
@@ -50,45 +48,80 @@ class TLAPlusKernel(Kernel):
         ]
 
     def run_proc(self, cmd, workspace):
-        logging.info("run_proc '%s'", cmd)
+        logging.info("run_proc started '%s'", cmd)
 
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=workspace)
-        out, err = [s.decode() for s in proc.communicate()]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=workspace)
+        out, _ = proc.communicate()
+        out = out.decode()
 
-        logging.info("run_proc got response (rc=%d) stdout='%s' stderr='%s'",proc.returncode,out,err)
+        logging.info(out)
+        logging.info("run_proc finished (rc=%d)", proc.returncode)
 
-        if proc.returncode != 0 and out == "":
-            out = "Failed to run tla2tools: %s" % (err)
+        return (out, proc.returncode)
 
-        return out
+    def respond_with_error(self, err):
+        self.send_response(self.iopub_socket, 'stream', {
+            'name': 'stderr',
+            'text': err
+        })
+        return {
+            'status': 'error',
+            'execution_count': self.execution_count,
+            'user_expressions': {},
+        }
 
-    def eval_module(self, module_name, module_src):
+    def do_execute(self, payload, silent, store_history=True, user_expressions=None,
+                   allow_stdin=False):
+        """Route execute request depending on type.
+        """
+
+        # XXX: try catch here?
+
+        # module
+        if re.match(r'^\s*-----*\s*MODULE\s', payload):
+            return self.eval_module(payload)
+
+        # run config
+        elif re.match(r'^\s*!tlc:', payload):
+            return self.eval_tlc_config(payload)
+
+        # otherwise treat payload as a constant expression
+        else:
+            return self.eval_expr(payload)
+
+
+    def eval_module(self, module_src):
+
+        logging.info("eval_module '%s'", module_src)
+
+        module_name = re.match(r'^\s*-----*\s*MODULE\s+(\w+)\s', module_src).group(1)
         self.modules[module_name] = module_src
+
         workspace = self.get_workspace()
         new_src = None
 
-        cmd = self.tlatools_command()
+        cmd = self.java_command()
         cmd += ['tla2sany.SANY']
         cmd += [module_name + '.tla']
 
-        out = self.run_proc(cmd, workspace)
+        out, rc = self.run_proc(cmd, workspace)
 
-        if 'Fatal' in out:
+        if rc != 0:
             shutil.rmtree(workspace)
-            return (out, None)
+            return self.respond_with_error(out)
 
         # run pcal.trans if needed
         if '--algorithm' in module_src or '--fair' in module_src:
-            cmd = self.tlatools_command()
+            cmd = self.java_command()
             cmd += ['pcal.trans']
             cmd += [module_name + '.tla']
 
-            out = self.run_proc(cmd, workspace)
-
-            if 'error' in out:
+            out, rc = self.run_proc(cmd, workspace)
+            if rc != 0:
                 shutil.rmtree(workspace)
-                return (out, None)
+                return self.respond_with_error(out)
 
+            # read rewritten tla file with translation
             with open(os.path.join(workspace, module_name + '.tla')) as f:
                 new_src = f.read()
 
@@ -96,31 +129,79 @@ class TLAPlusKernel(Kernel):
             logging.info("eval_module update module src '%s'", new_src)
 
         shutil.rmtree(workspace)
-        return ('', new_src)
+        return {
+            'status': 'ok',
+            'execution_count': self.execution_count,
+            'payload': [
+                {
+                    "source": "set_next_input",
+                    "text": new_src,
+                    "replace": True,
+                } if new_src else {}
+            ],
+            'user_expressions': {},
+        }
 
-    def run_tlc(self, module_name, extra_keys, cfg=''):
-        assert(module_name in self.modules)
+    def eval_tlc_config(self, cfg):
+        logging.info("eval_tlc_config '%s'", cfg)
 
+        tlc_re = r'^\s*!tlc:([^\s]+)(.*)'
+        match = re.match(tlc_re, cfg)
+        module_name = match.group(1)
+        extra_params = match.group(2).strip()
+        extra_params = [] if extra_params == '' else extra_params.split()
+
+        # bail out if module is not found
+        if module_name not in self.modules:
+            err = "Module '{}' not found.\n".format(module_name)
+            err += "Module should be defined and evaluated in some cell before tlc run."
+            return self.respond_with_error(err)
+
+        # XXX: move to with and fill
         workspace = self.get_workspace()
 
         # dump config
+        # XXX: with
+        cfg = re.sub(tlc_re, '', cfg)
         f = open(os.path.join(workspace, 'run.cfg'), 'w')
         f.write(cfg)
         f.close()
 
-        cmd = self.tlatools_command()
+        cmd = self.java_command()
         cmd += ['tlc2.TLC']
         cmd += ['-workers', str(multiprocessing.cpu_count())]
         cmd += ['-config', 'run.cfg']
-        cmd += extra_keys
+        cmd += extra_params
         cmd += [module_name + '.tla']
 
-        out = self.run_proc(cmd, workspace)
+        # run TLC and redirect stderr to stdout
+        logging.info("running '%s'", cmd)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=workspace)
+        with proc.stdout:
+            for line in iter(proc.stdout.readline, b''):
+                self.send_response(self.iopub_socket, 'stream', {
+                    'name': 'stdout',
+                    'text': line.decode()
+                })
+                logging.info("> ", line.decode())
+
+        # wait for proc to exit and set returncode
+        proc.wait()
+        logging.info("tlc finished with rc=%d", proc.returncode)
 
         shutil.rmtree(workspace)
-        return out
 
-    def run_expr(self, expr):
+        return {
+            'status': 'ok' if proc.returncode == 0 else 'error',
+            'execution_count': self.execution_count,
+            'user_expressions': {},
+        }
+
+
+    def eval_expr(self, expr):
+
+        logging.info("got expression '%s'", expr)
+
         # Wrap output in EXPR_BEGIN/EXPR_END to catch it later.
         # That method is due to github.com/will62794 and looks much nicer then
         # a regex-based set matching used in tla toolbox itself.
@@ -131,50 +212,31 @@ class TLAPlusKernel(Kernel):
         ====
         """ % (expr)
         self.modules['expr'] = model_src
-        raw = self.run_tlc('expr', [])
-        raw_lines = raw.splitlines()
 
-        if '"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines:
-            start = raw_lines.index('"EXPR_BEGIN"')
-            stop = raw_lines.index('"EXPR_END"')
-            res = "\n".join(raw_lines[start+1:stop])
-        else:
-            # otherwise show full out with error
-            res = raw
-        return res
+        workspace = self.get_workspace()
 
-    def do_execute(self, code, silent, store_history=True, user_expressions=None,
-                   allow_stdin=False):
+        # dump config
+        f = open(os.path.join(workspace, 'run.cfg'), 'w')
+        f.write('')
+        f.close()
 
-        # expression result
-        res = ''
-        # new cell content if needed
-        code_update = None
-        
-        # module
-        if self.mod_re.match(code):
-            logging.info("got module '%s'", code)
-            module_name = self.mod_re.match(code).group(1)
-            res, code_update = self.eval_module(module_name, code)
+        cmd = self.java_command()
+        cmd += ['tlc2.TLC']
+        cmd += ['-config', 'run.cfg']
+        cmd += ['expr.tla']
 
-        # run config
-        elif self.tlc_re.match(code):
-            logging.info("got run config '%s'", code)
-            module_name = self.tlc_re.match(code).group(1)
-            extra_params = self.tlc_re.match(code).group(2).strip()
-            extra_params = [] if extra_params == '' else extra_params.split()
+        out, rc = self.run_proc(cmd, workspace)
 
-            if module_name in self.modules:
-                config = self.tlc_re.sub('',code)
-                res = self.run_tlc(module_name, extra_params, cfg=config)
-            else:
-                res = "Module '{}' not found.\n".format(module_name)
-                res += "Module should be defined and evaluated in some cell before tlc run."
+        shutil.rmtree(workspace)
 
-        # constant expression
-        else:
-            logging.info("got expression '%s'", code)
-            res = self.run_expr(code)
+        raw_lines = out.splitlines()
+
+        if rc != 0 or not ('"EXPR_BEGIN"' in raw_lines and '"EXPR_END"' in raw_lines):
+            return self.respond_with_error(out)
+
+        start = raw_lines.index('"EXPR_BEGIN"')
+        stop = raw_lines.index('"EXPR_END"')
+        res = "\n".join(raw_lines[start+1:stop])
 
         self.send_response(self.iopub_socket, 'stream', {
             'name': 'stdout',
@@ -183,14 +245,6 @@ class TLAPlusKernel(Kernel):
 
         return {
             'status': 'ok',
-            # The base class increments the execution count
             'execution_count': self.execution_count,
-            'payload': [
-                {
-                    "source": "set_next_input",
-                    "text": code_update,
-                    "replace": True,
-                } if code_update else {}
-            ],
             'user_expressions': {},
         }
