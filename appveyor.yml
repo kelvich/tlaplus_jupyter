@@ -3,9 +3,9 @@ environment:
   matrix:
   - TOXENV: py27
   - TOXENV: py37
+  - TOXENV: py38
 build: off
 install:
-  - pip install jupyter
   - pip install .
   - python -m tlaplus_jupyter.install
 test_script:
