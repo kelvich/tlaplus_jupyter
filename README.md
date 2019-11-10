@@ -35,15 +35,21 @@ In order to create new TLA⁺ notebook click on `New` button and select TLA⁺ i
 
 1. Cells with full module definition. Upon execution kernel will perform syntax check (with tla2sany.SANY) and report errors if any. If module contains pluscal program kernel will also translate it to TLA.
 
-2. Cell starting with `!tlc:ModuleName` where `ModuleName` is the name of one of the modules previously executed. In this case cell is treated as a config file for TLC model checker. For example to check spec `Spec` and invariant `TypeOk` of model `DieHardTLA` execute following:
+2. Cell starting with `%tlc:ModuleName` where `ModuleName` is the name of one of the modules previously executed. In this case cell is treated as a config file for TLC model checker. For example to check spec `Spec` and invariant `TypeOk` of model `DieHardTLA` execute following:
 ```
-!tlc:DieHardTLA
+%tlc:DieHardTLA
 SPECIFICATION Spec
 INVARIANT TypeOK
 ```
 Init and next state formula can be set after keywords `INIT` and `NEXT` correspondingly. Constant definitions should follow `CONSTANTS` keyword separated by newline or commas. Description of possible config statements and syntax is given in chapter 14 of [Specifying systems](https://www.microsoft.com/en-us/research/publication/specifying-systems-the-tla-language-and-tools-for-hardware-and-software-engineers/) book.
 
-TLC evaluation happens in the context of all defined modules. So if model referres another model thst other model should be at some cell too.
+Custom TLC flags may be specified after module name:
+```
+%tlc:DieHardTLA -deadlock
+SPECIFICATION Spec
+```
+
+TLC evaluation happens in the context of all defined modules. So if model referres another model that other model should be at some cell too.
 
 3. Cells containing nether `%`-magic nor module definition is treated as a constant expression and will print it result on execution. As with `!tlc` evaluation happens in the context of all defined modules, so expression can refer anything defined in evaluated modules.
 

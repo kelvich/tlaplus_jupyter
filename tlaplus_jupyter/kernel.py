@@ -94,7 +94,7 @@ class TLAPlusKernel(Kernel):
                 return self.eval_module(payload)
 
             # run config
-            elif re.match(r'^\s*!tlc:', payload):
+            elif re.match(r'^\s*%tlc:', payload):
                 return self.eval_tlc_config(payload)
 
             # tollge log collection
@@ -164,7 +164,7 @@ class TLAPlusKernel(Kernel):
     def eval_tlc_config(self, cfg):
         logging.info("eval_tlc_config '%s'", cfg)
 
-        tlc_re = r'^\s*!tlc:([^\s]+)(.*)'
+        tlc_re = r'^\s*%tlc:([^\s]*)(.*)'
         match = re.match(tlc_re, cfg)
         module_name = match.group(1)
         extra_params = match.group(2).strip()
@@ -173,7 +173,7 @@ class TLAPlusKernel(Kernel):
         # bail out if module is not found
         if module_name not in self.modules:
             err = "Module '{}' not found.\n".format(module_name)
-            err += "Module should be defined and evaluated in some cell before tlc run."
+            err += "Module should be defined and evaluated in some cell before TLC run."
             return self.respond_with_error(err)
 
         # XXX: move to with and fill
@@ -209,6 +209,13 @@ class TLAPlusKernel(Kernel):
         logging.info("tlc finished with rc=%d", proc.returncode)
 
         shutil.rmtree(workspace)
+
+        # make sence to show all command if some TLC keywords were set
+        if extra_params and proc.returncode != 0:
+            self.send_response(self.iopub_socket, 'stream', {
+                'name': 'stderr',
+                'text': "Failed command was: '%s'" % ' '.join(cmd)
+            })
 
         return {
             'status': 'ok' if proc.returncode == 0 else 'error',
