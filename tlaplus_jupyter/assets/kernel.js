@@ -44,22 +44,25 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
         // "\""
         var string_re = /"(?:[^\\"]|\\.)*"?/;
 
+        var extra_ops_re = re_join([
+            /\\E/, /\\exists/, /\\A/, /\\forall/, /\\EE/, /\\AA/,/::/, /<</, />>_/, />>/, /\|->/,
+            /->/, /<-/
+        ]);
         var prefix_re = re_join([
-            /\\lnot/, /\\neg/, /~/, /\[\]/, /<>/, /ENABLED/, /UNCHANGED/, /SUBSET/, /UNION/,
-            /DOMAIN/
+            /\\lnot/, /\\neg/, /~/, /\[\]/, /<>/
         ]);
         var infix_re = re_join([
             /\\approx/, /\\asymp/, /\\bigcirc/, /\\bullet/, /\\cap/, /\\cdot/,
             /\\circ/, /\\cong/, /\\cup/, /\\div/, /\\doteq/, /\\equiv/, /\\geq/, /\\gg/, /\\in/,
             /\\intersect/, /\\union/, /\\land/, /\\leq/, /\\ll/, /\\lor/, /\\o/, /\\odot/,
-            /\\ominus/, /\\oplus/, /\\oslash/, /\\otimes/, /\\prec/, /\\preceq/, /\\propto/,
-            /\\sim/, /\\simeq/, /\\sqcap/, /\\sqcup/, /\\sqsubset/, /\\sqsupset/, /\\sqsubseteq/,
-            /\\sqsupseteq/, /\\star/, /\\subset/, /\\subseteq/, /\\succ/, /\\succeq/, /\\supset/,
-            /\\supseteq/, /\\uplus/, /\\wr/, /\\/, /~>/, /=>/, /=</, /=\|/, /=/, /##/, /#/, /\^\^/,
+            /\\ominus/, /\\oplus/, /\\oslash/, /\\otimes/, /\\preceq/, /\\prec/, /\\propto/,
+            /\\simeq/, /\\sim/, /\\sqcap/, /\\sqcup/, /\\sqsubseteq/, /\\sqsupseteq/, /\\sqsubset/,
+            /\\sqsupset/, /\\star/, /\\subseteq/, /\\subset/, /\\succeq/, /\\succ/, /\\supseteq/,
+            /\\supset/, /\\uplus/, /\\wr/, /\\/, /~>/, /=>/, /=</, /=\|/, /=/, /##/, /#/, /\^\^/,
             /\^/, /--/, /-/, /\*/, /\+\+/, /\+/, /&&/, /&/, /\/\//, /\/\\/, /\/=/, /\//, /\\\//,
             /-\|/, /-\+->/, /\*\*/, /<=>/, /<:/, /<=/, /</, />=/, />/, /\.\.\./, /\.\./, /\|\|/,
             /\|/, /\|-/, /\|=/, /\$\$/, /\$/, /\?\?/, /%%/, /%/, /@@/, /!!/, /:>/, /:=/, /::=/,
-            /\(\+\)/, /\(-\)/, /\(.\)/, /\(\/\)/, /\(\\X\)/, /\\notin/, /\\times/, /\\X/
+            /\(\+\)/, /\(-\)/, /\(\.\)/, /\(\/\)/, /\(\\X\)/, /\\notin/, /\\times/, /\\X/
         ]);
         var postfix_re = re_join([/'/, /\^\+/, /\^\*/, /\^#/, /-\./]);
 
@@ -94,6 +97,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
                 { regex: prefix_re, token: "atom" },
                 { regex: infix_re, token: "atom" },
                 { regex: postfix_re, token: "atom" },
+                { regex: extra_ops_re, token: "atom"}
             ],
 
             pluscal: [
@@ -112,6 +116,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
                 { regex: prefix_re, token: "atom" },
                 { regex: infix_re, token: "atom" },
                 { regex: postfix_re, token: "atom" },
+                { regex: extra_ops_re, token: "atom"}
             ],
 
             block_comment: [
@@ -123,7 +128,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
 
             meta: {
                 dontIndentStates: ["block_comment"],
-                lineComment: '\*'
+                lineComment: '\\*'
             }
         });
 
