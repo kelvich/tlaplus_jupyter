@@ -10,7 +10,9 @@ Jupyter kernel for TLA⁺ and Pluscal specification languages.
 * Can be executed online with Binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
 * No need to install TLA Toolbox: Java and Python will be enough.
 
-XXX screen or gif
+<p align="center">
+  <img alt="tlaplus_jupyter" src="https://user-images.githubusercontent.com/284219/68620303-3d8b1f80-04de-11ea-84f8-09d3ffdde4d3.png">
+</p>
 
 ## Installation
 
