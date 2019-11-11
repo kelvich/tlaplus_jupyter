@@ -4,38 +4,38 @@
 
 # tlaplus_jupyter
 
-Jupyter kernel for TLA⁺ and pluscal specification languages.
+Jupyter kernel for TLA⁺ and Pluscal specification languages.
 * Syntax highlight based on official lexer.
 * REPL functionality for expressions.
-* Can be execulted online with binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
+* Can be executed online with Binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
 * No need to install TLA Toolbox: Java and Python will be enough.
 
 XXX screen or gif
 
 ## Installation
 
-`tlaplus_jupyter` is a python package installable with `pip`. Both Python 2 and 3 are supported. In order to install run:
+`tlaplus_jupyter` is a python package installable with `pip`. Python 2 and 3 are supported. To install run:
 
 ```
 pip install tlaplus_jupyter
 python -m tlaplus_jupyter.install
 ```
 
-The last step will register `tlaplus_jupyter` as a jupyter kernel in your system and will download `tla2tools.jar`. After that jupyter can be started as usual:
+The last step will register `tlaplus_jupyter` as a Jupyter kernel in your system and will download `tla2tools.jar`. After that Jupyter can be started as usual:
 
 ```
 jupyter notebook
 ```
 
-In order to create new TLA⁺ notebook click on `New` button and select TLA⁺ in a dropdown menu. It is also handy to enable line numbering inside cells (View > Toggle Line Numbers) since syntax checker referres problems by their line numbers.
+To create a new TLA⁺ notebook click on the `New` button and select TLA⁺ in a dropdown menu. It is also handy to enable line numbering inside cells (View > Toggle Line Numbers) since syntax checker refers to problems by their line numbers.
 
 ## Usage
 
-`tlaplus_jupyter` supports several types of cells with diffent behaviour on execution:
+`tlaplus_jupyter` supports several types of cells with different behavior on execution:
 
-1. Cells with `full module definition`. Upon execution kernel will perform syntax check (with tla2sany.SANY) and report errors if any. If module contains pluscal program kernel will also translate it to TLA.
+1. Cells with `full module definition`. Upon execution kernel will perform syntax check (with tla2sany.SANY) and report errors if any. If the module contains Pluscal program kernel will also translate it to TLA.
 
-2. Cell starting with `%tlc:ModuleName` where `ModuleName` is the name of one of the modules previously executed. In this case cell is treated as a config file for TLC model checker. For example to check spec `Spec` and invariant `TypeOk` of model `DieHardTLA` execute following:
+2. Cell starting with `%tlc:ModuleName` where `ModuleName` is the name of one of the modules previously executed. In this case, the cell is treated as a config file for the TLC model checker. For example to check spec `Spec` and invariant `TypeOk` of model `DieHardTLA` execute following:
     ```
     %tlc:DieHardTLA
     SPECIFICATION Spec
@@ -50,15 +50,15 @@ In order to create new TLA⁺ notebook click on `New` button and select TLA⁺ i
     SPECIFICATION Spec
     ```
 
-    TLC evaluation happens in the context of all defined modules. So if model referres another model that other model should be at some cell too.
+    TLC evaluation happens in the context of all defined modules. So if model refers to another model that other model should be at some cell too.
 
-3. Cells containing nether `%`-magic nor module definition are treated as a constant expression and will print it result on execution. As with `!tlc` evaluation happens in the context of all defined modules, so expression can refer anything defined in evaluated modules.
+3. Cells containing neither `%`-magic nor module definition are treated as a constant expression and will print its results on execution. As with `!tlc` evaluation happens in the context of all defined modules, so the expression can refer to anything defined in evaluated modules.
 
 4. Command `%log` / `%log on` / `%log off` correspondingly shows kernel log / enables logging / disables logging for currently open notebook.
 
-## Sharing executable models with binder
+## Sharing executable models with Binder
 
-TLA⁺ models shared on github can be easily made runnable by coping this [Dockerfile](Dockerfile) to repository root. After that, url to such repo can be used at [Binder](https://mybinder.org) to start dynamic TLA⁺ environment.
+TLA⁺ models shared on Github can be easily made runnable by coping  [Dockerfile](Dockerfile) to the repository root. After that, URL to such repo can be used at [Binder](https://mybinder.org) to start a dynamic TLA⁺ environment.
 
 ## Related Projects
 
