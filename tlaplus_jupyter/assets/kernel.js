@@ -134,17 +134,26 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
 
         CodeMirror.defineMIME("text/x-tlaplus", "tlaplus");
 
-        // assorted kludges to deal with fact that all this stuff can be loaded
-        // after full notebook init
+        // Assorted kludges to deal with the fact that all this stuff can be loaded
+        // after the notebook was fully rendered.
+
+        // Set default mode for a new cells
         IPython.CodeCell.options_default["cm_config"]["mode"] = "tlaplus";
 
+        // Highlight existing code cells
         [...document.querySelectorAll('.code_cell .CodeMirror')].forEach(c => {
             c.CodeMirror.setOption('mode', 'tlaplus');
         });
 
         Jupyter.notebook.get_cells().forEach(function(c) {
+            // Fix mode on existing code cells
             if (c.cell_type == "code") {
                 c._options.cm_config['mode'] = 'tlaplus';
+            }
+            // Re-render markdown in case it has code block with our mode
+            else if (c.cell_type == "markdown") {
+                c.unrender();
+                c.render();
             }
         });
     }
@@ -152,7 +161,7 @@ define(['codemirror/addon/mode/simple', "base/js/namespace", 'codemirror/lib/cod
     return {
         onload: function () {
             load_mode();
-            // Enforce buggy loading:
+            // Enforce late loading:
             // setTimeout(load_mode, 3000);
         }
     }
