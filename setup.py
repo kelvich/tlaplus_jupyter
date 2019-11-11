@@ -33,6 +33,6 @@ setup(
     classifiers=[
         'Topic :: Software Development :: Interpreters',
         'Topic :: Software Development :: Quality Assurance',
-        'Scientific/Engineering :: Mathematics'
+        'Topic :: Scientific/Engineering :: Mathematics'
     ]
 )
