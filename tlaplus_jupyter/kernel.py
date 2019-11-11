@@ -5,7 +5,7 @@ import tempfile
 import re
 import logging
 import shutil
-import multiprocessing
+import psutil
 import subprocess
 import traceback
 
@@ -185,7 +185,7 @@ class TLAPlusKernel(Kernel):
 
         cmd = self.java_command()
         cmd += ['tlc2.TLC']
-        cmd += ['-workers', str(multiprocessing.cpu_count())]
+        cmd += ['-workers', str(psutil.cpu_count())]
         cmd += ['-config', 'run.cfg']
         cmd += extra_params
         cmd += [module_name + '.tla']

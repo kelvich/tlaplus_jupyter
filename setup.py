@@ -18,11 +18,12 @@ setup(
     include_package_data=True,
     test_suite='tests',
     install_requires=[
-        # not actually needed, but it's simpler to install
+        # notebook is not actually needed, but it's simpler to install
         'notebook>=5.7.8',
         'jupyter-client>=5.3.4',
-        'ipykernel==4.10.1',
-        'future>=0.18'
+        'ipykernel>=4.10.1',
+        'future>=0.18',
+        'psutil>=5.6.5'
     ],
     zip_safe=False
 )
