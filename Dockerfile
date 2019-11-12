@@ -1,6 +1,6 @@
 FROM openjdk:13-alpine
 
-RUN apk add --update gcc libc-dev zeromq-dev python3-dev
+RUN apk add --update gcc libc-dev zeromq-dev python3-dev linux-headers
 
 ARG NB_USER=leslie
 ARG NB_UID=1000
