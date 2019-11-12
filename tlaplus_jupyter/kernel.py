@@ -110,7 +110,11 @@ class TLAPlusKernel(Kernel):
 
         logging.info("eval_module '%s'", module_src)
 
-        module_name = re.match(r'^\s*-----*\s*MODULE\s+(\w+)\s', module_src).group(1)
+        match = re.match(r'^\s*-----*\s*MODULE\s+(\w+)\s', module_src)
+        if not match:
+            return self.respond_with_error("Can't parse module name, please check module header.")
+
+        module_name = match.group(1)
         self.modules[module_name] = module_src
 
         workspace = self.get_workspace()
