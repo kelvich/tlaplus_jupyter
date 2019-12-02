@@ -2,21 +2,13 @@ FROM openjdk:13-alpine3.10
 
 RUN apk add --update gcc libc-dev zeromq-dev python3-dev linux-headers
 
-ARG NB_USER=leslie
-ARG NB_UID=1000
+RUN addgroup tlauser && adduser -D -G tlauser -u 1000 tlauser
+COPY ./examples /home/tlauser
+RUN chown -R tlauser /home/tlauser
 
-ENV USER ${NB_USER}
-ENV NB_UID ${NB_UID}
-ENV HOME /home/${NB_USER}
+RUN pip3 install tlaplus_jupyter
+RUN python3 -m tlaplus_jupyter.install
 
-RUN addgroup ${NB_USER} && adduser \
-    -h ${HOME} -D -G ${NB_USER} -u ${NB_UID} ${NB_USER}
-
-COPY . ${HOME}/kernel
-RUN cd ${HOME}/kernel && python3 setup.py install
-RUN cd ${HOME} && python3 -m tlaplus_jupyter.install
-RUN chown -R ${NB_UID} ${HOME}
-
-USER ${NB_USER}
-WORKDIR $HOME
+USER tlauser
+WORKDIR /home/tlauser
 CMD ["jupyter", "notebook", "--ip", "0.0.0.0"]
