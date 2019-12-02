@@ -23,7 +23,7 @@ setup(
         # Whole 'notebook' package is not actually needed -- only 'jupyter-client' is
         # mandatory. But dependency on 'notebook' simplifies installation.
         'notebook>=5',
-        'ipykernel>=5',
+        'ipykernel>=4.10',
         'future>=0.16',
         'psutil>=4'
     ],
