@@ -1,13 +1,13 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/myh95n5j0j0pr04j/branch/master?svg=true)](https://ci.appveyor.com/project/kelvich/tlaplus-jupyter/branch/master)
 [![Build Status](https://travis-ci.org/kelvich/tlaplus_jupyter.svg?branch=master)](https://travis-ci.org/kelvich/tlaplus_jupyter)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master?filepath=intro.ipynb)
 
 # tlaplus_jupyter
 
 Jupyter kernel for TLA⁺ and Pluscal specification languages.
 * Syntax highlight based on official lexer.
 * REPL functionality for expressions.
-* Can be executed online with Binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master)
+* Can be executed online with Binder. [Try it now!](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master?filepath=intro.ipynb)
 * No need to install TLA Toolbox: Java and Python will be enough.
 
 <p align="center">
@@ -32,6 +32,8 @@ jupyter notebook
 To create a new TLA⁺ notebook click on the `New` button and select TLA⁺ in a dropdown menu. It is also handy to enable line numbering inside cells (View > Toggle Line Numbers) since syntax checker refers to problems by their line numbers.
 
 ## Usage
+
+Basic usage is explained in an [intro notebook](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master?filepath=intro.ipynb).
 
 `tlaplus_jupyter` supports several types of cells with different behavior on execution:
 
