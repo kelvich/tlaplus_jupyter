@@ -1,4 +1,4 @@
-FROM openjdk:13-alpine
+FROM openjdk:13-alpine3.10
 
 RUN apk add --update gcc libc-dev zeromq-dev python3-dev linux-headers
 

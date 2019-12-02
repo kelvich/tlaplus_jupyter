@@ -20,12 +20,12 @@ setup(
     python_requires=">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     test_suite='tests',
     install_requires=[
-        # notebook is not actually needed, but it's simpler to install
-        'notebook>=5.7.8',
-        'jupyter-client>=5.3.4',
-        'ipykernel>=4.10.1',
-        'future>=0.18',
-        'psutil>=5.6.5'
+        # Whole 'notebook' package is not actually needed -- only 'jupyter-client' is
+        # mandatory. But dependency on 'notebook' simplifies installation.
+        'notebook>=5',
+        'ipykernel>=5',
+        'future>=0.16',
+        'psutil>=4'
     ],
     zip_safe=False,
     license='BSD',
