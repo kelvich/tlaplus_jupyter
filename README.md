@@ -31,6 +31,18 @@ jupyter notebook
 
 To create a new TLA⁺ notebook click on the `New` button and select TLA⁺ in a dropdown menu. It is also handy to enable line numbering inside cells (View > Toggle Line Numbers) since syntax checker refers to problems by their line numbers.
 
+### Ubuntu 18.04 with python3 virtualenv
+
+```
+sudo apt install python3-venv python3-pip
+cd /tmp/
+python3 -m venv tlaplus
+source tlaplus/bin/activate
+pip3 install tlaplus_jupyter # Expect a few errors which apparently don't matter
+python3 -m tlaplus_jupyter.install
+jupyter notebook
+```
+
 ## Usage
 
 Basic usage is explained in an [intro notebook](https://mybinder.org/v2/gh/kelvich/tlaplus_jupyter/master?filepath=intro.ipynb).
