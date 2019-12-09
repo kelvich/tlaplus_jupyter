@@ -31,7 +31,7 @@ jupyter notebook
 
 To create a new TLA⁺ notebook click on the `New` button and select TLA⁺ in a dropdown menu. It is also handy to enable line numbering inside cells (View > Toggle Line Numbers) since syntax checker refers to problems by their line numbers.
 
-_Note_: by default `python -m tlaplus_jupyter.install` enables TLC execution [statistics collection](https://github.com/tlaplus/tlaplus/blob/master/tlatools/src/util/ExecutionStatisticsCollector.md). Pass `--help` to see how to opt out.
+Note that by default `python -m tlaplus_jupyter.install` enables TLC execution [statistics collection](https://github.com/tlaplus/tlaplus/blob/master/tlatools/src/util/ExecutionStatisticsCollector.md). Pass `--help` to see how to opt out.
 
 ## Usage
 
