@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import shutil
-import secrets
+import binascii
 
 from future.standard_library import install_aliases
 install_aliases()
@@ -73,20 +73,16 @@ def main(argv=None):
 
     # install tla2tools.jar
     vendor_dir = os.path.join(os.path.dirname(__file__), 'vendor')
-    try:
+    if not os.path.isdir(vendor_dir):
         os.mkdir(vendor_dir)
-    except FileExistsError:
-        pass
     jar_path = os.path.join(vendor_dir, 'tla2tools.jar')
     print("Downloading tla2tools.jar to " + jar_path)
     urlretrieve(TOOLS_URI, jar_path)
 
     # install stats collector id
     tla_dir = os.path.join(os.path.expanduser("~"), ".tlaplus")
-    try:
+    if not os.path.isdir(tla_dir):
         os.mkdir(tla_dir)
-    except FileExistsError:
-        pass
     statfile_path = os.path.join(tla_dir, "esc.txt")
 
     old_content = None
@@ -98,7 +94,8 @@ def main(argv=None):
         if args.tlc_exec_stats == "share":
             # do not rewrite id if it is already present
             if old_content == None or len(old_content) != 32:
-                f.write(secrets.token_hex(16))
+                token = binascii.b2a_hex(os.urandom(16)).decode()
+                f.write(token)
             else:
                 f.write(old_content)
         elif args.tlc_exec_stats == "no-id":
