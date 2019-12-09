@@ -44,6 +44,7 @@ class TLAPlusKernel(Kernel):
         return [
             'java',
             '-XX:+UseParallelGC',
+            '-Dtlc2.TLC.ide=tlaplus_jupyter',
             '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')
         ]
 
@@ -250,7 +251,6 @@ ASSUME PrintT("EXPR_BEGIN") /\ PrintT(
         f.close()
 
         cmd = self.java_command()
-        cmd += ['-Dtlc2.TLC.ide=tlaplus_jupyter']
         cmd += ['tlc2.TLC']
         cmd += ['-config', 'run.cfg']
         cmd += ['expr.tla']
