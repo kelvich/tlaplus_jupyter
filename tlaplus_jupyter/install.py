@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import shutil
+import binascii
 
 from future.standard_library import install_aliases
 install_aliases()
@@ -42,14 +43,25 @@ def _is_root():
         return False # assume not an admin on non-Unix platforms
 
 def main(argv=None):
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument('--user', action='store_true',
         help="Install to the per-user kernels registry. Default if not root.")
     ap.add_argument('--sys-prefix', action='store_true',
         help="Install to sys.prefix (e.g. a virtualenv or conda env)")
     ap.add_argument('--prefix',
         help="Install to the given prefix. "
-             "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/")
+             "Kernelspec will be installed in\n"
+             "{PREFIX}/share/jupyter/kernels/")
+    ap.add_argument('--tlc-exec-stats', choices=['share', 'no-id', 'disable'],
+        default="share",
+        help="Share execution statistics to guide TLC development.\n"
+             " share -- always share execution statistics\n"
+             " no-id -- share without installation identifier\n"
+             " disable -- never share\n"
+             "Default is to share. Re-installation with a new value will override\n"
+             "previous decision. Details of data collected can be found at\n"
+             "https://github.com/tlaplus/tlaplus/blob/master/tlatools/src/util/ExecutionStatisticsCollector.md"
+        )
     args = ap.parse_args(argv)
 
     if args.sys_prefix:
@@ -59,14 +71,38 @@ def main(argv=None):
 
     install_my_kernel_spec(user=args.user, prefix=args.prefix)
 
+    # install tla2tools.jar
     vendor_dir = os.path.join(os.path.dirname(__file__), 'vendor')
-    try:
+    if not os.path.isdir(vendor_dir):
         os.mkdir(vendor_dir)
-    except FileExistsError:
-        pass
     jar_path = os.path.join(vendor_dir, 'tla2tools.jar')
     print("Downloading tla2tools.jar to " + jar_path)
     urlretrieve(TOOLS_URI, jar_path)
+
+    # install stats collector id
+    tla_dir = os.path.join(os.path.expanduser("~"), ".tlaplus")
+    if not os.path.isdir(tla_dir):
+        os.mkdir(tla_dir)
+    statfile_path = os.path.join(tla_dir, "esc.txt")
+
+    old_content = None
+    if os.path.isfile(statfile_path):
+        with open(statfile_path, "r") as f:
+            old_content = f.read().strip()
+
+    with open(statfile_path, "w") as f:
+        if args.tlc_exec_stats == "share":
+            # do not rewrite id if it is already present
+            if old_content == None or len(old_content) != 32:
+                token = binascii.b2a_hex(os.urandom(16)).decode()
+                f.write(token)
+            else:
+                f.write(old_content)
+        elif args.tlc_exec_stats == "no-id":
+            f.write("RANDOM_IDENTIFIER")
+        else:
+            f.write("NO_STATISTICS")
+        f.write("\n")
 
 if __name__ == '__main__':
     main()

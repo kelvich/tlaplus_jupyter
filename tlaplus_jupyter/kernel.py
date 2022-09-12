@@ -44,6 +44,7 @@ class TLAPlusKernel(Kernel):
         return [
             'java',
             '-XX:+UseParallelGC',
+            '-Dtlc2.TLC.ide=tlaplus_jupyter',
             '-cp', os.path.join(self.vendor_path, 'tla2tools.jar')
         ]
 
